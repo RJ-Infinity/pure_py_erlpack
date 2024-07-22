@@ -7,8 +7,6 @@ import struct
 import zlib
 from .constants import *
 from .types import *
-from cpython cimport *
-import cython
 
 __all__ = ['ErlangTermDecoder', 'ErlangTermDecodeError']
 
@@ -18,8 +16,8 @@ class ErlangTermDecodeError(Exception):
 
 
 # noinspection PyMethodMayBeStatic,PyPep8Naming,PyShadowingBuiltins,PyUnusedLocal
-cdef class ErlangTermDecoder(object):
-    cdef object encoding
+class ErlangTermDecoder(object):
+    # def object encoding
     def __init__(self, encoding=None):
         self.encoding = encoding
 
@@ -29,7 +27,7 @@ cdef class ErlangTermDecoder(object):
             raise ErlangTermDecodeError('Bad version number. Expected %d found %d' % (FORMAT_VERSION, version))
         return self.decode_part(bytes, offset + 1)[0]
 
-    cdef object decode_part(self, bytes, offset=0):
+    def decode_part(self, bytes, offset=0):
         opcode = bytes[offset:offset+1]
 
         if opcode == b'a':
@@ -107,86 +105,86 @@ cdef class ErlangTermDecoder(object):
         else:
             raise ValueError('Unexpected opcode %s' % opcode)
 
-    cdef object decode_a(self, bytes, offset):
+    def decode_a(self, bytes, offset):
         """SMALL_INTEGER_EXT"""
         return ord(bytes[offset:offset+1]), offset + 1
 
-    cdef object decode_b(self, bytes, offset):
+    def decode_b(self, bytes, offset):
         """INTEGER_EXT"""
         return struct.unpack('>l', bytes[offset:offset + 4])[0], offset + 4
 
-    cdef object decode_c(self, bytes, offset):
+    def decode_c(self, bytes, offset):
         """FLOAT_EXT"""
         return float(bytes[offset:offset + 31].split('\x00', 1)[0]), offset + 31
 
-    cdef object decode_F(self, bytes, offset):
+    def decode_F(self, bytes, offset):
         """NEW_FLOAT_EXT"""
         return struct.unpack('>d', bytes[offset:offset + 8])[0], offset + 8
 
-    cdef object decode_d(self, bytes, offset):
+    def decode_d(self, bytes, offset):
         """ATOM_EXT"""
         atom_len, = struct.unpack('>H', bytes[offset:offset + 2])
         offset += 2
         atom = bytes[offset:offset + atom_len]
         return self.convert_atom(atom), offset + atom_len
 
-    cdef object decode_s(self, bytes, offset):
+    def decode_s(self, bytes, offset):
         """SMALL_ATOM_EXT"""
         atom_len = ord(bytes[offset:offset+1])
         offset += 1
         atom = bytes[offset:offset + atom_len]
         return self.convert_atom(atom), offset + atom_len
 
-    cdef object decode_v(self, bytes, offset):
+    def decode_v(self, bytes, offset):
         """ATOM_UTF8_EXT"""
         atom_len, = struct.unpack('>H', bytes[offset:offset + 2])
         offset += 2
         atom = bytes[offset:offset + atom_len]
         return self.convert_atom(atom, encoding='utf-8'), offset + atom_len
 
-    cdef object decode_w(self, bytes, offset):
+    def decode_w(self, bytes, offset):
         """SMALL_ATOM_UTF8_EXT"""
         atom_len = ord(bytes[offset:offset+1])
         offset += 1
         atom = bytes[offset:offset + atom_len]
         return self.convert_atom(atom, encoding='utf-8'), offset + atom_len
 
-    cdef object decode_t(self, bytes, offset):
+    def decode_t(self, bytes, offset):
         """MAP_EXT"""
         arity, = struct.unpack('>L', bytes[offset:offset + 4])
         offset += 4
         kv = {}
-        for i in xrange(arity):
+        for i in range(arity):
             key, offset = self.decode_part(bytes, offset)
             value, offset = self.decode_part(bytes, offset)
             kv[key] = value
         return kv, offset
 
-    cdef object decode_h(self, bytes, offset):
+    def decode_h(self, bytes, offset):
         """SMALL_TUPLE_EXT"""
         arity = ord(bytes[offset:offset+1])
         offset += 1
         items = []
-        for i in xrange(arity):
+        for i in range(arity):
             val, offset = self.decode_part(bytes, offset)
             items.append(val)
         return tuple(items), offset
 
-    cdef object decode_i(self, bytes, offset):
+    def decode_i(self, bytes, offset):
         """LARGE_TUPLE_EXT"""
         arity, = struct.unpack('>L', bytes[offset:offset + 4])
         offset += 4
         items = []
-        for i in xrange(arity):
+        for i in range(arity):
             val, offset = self.decode_part(bytes, offset)
             items.append(val)
         return tuple(items), offset
 
-    cdef object decode_j(self, bytes, offset):
+    def decode_j(self, bytes, offset):
         """NIL_EXT"""
         return [], offset
 
-    cdef object decode_k(self, bytes, offset):
+    def decode_k(self, bytes, offset):
         """STRING_EXT"""
         length, = struct.unpack('>H', bytes[offset:offset + 2])
         offset += 2
@@ -198,12 +196,12 @@ cdef class ErlangTermDecoder(object):
             st = [ord(x) for x in st]
         return st, offset + length
 
-    cdef object decode_l(self, bytes, offset):
+    def decode_l(self, bytes, offset):
         """LIST_EXT"""
         length, = struct.unpack('>L', bytes[offset:offset + 4])
         offset += 4
         items = []
-        for i in xrange(length):
+        for i in range(length):
             val, offset = self.decode_part(bytes, offset)
             items.append(val)
         tail, offset = self.decode_part(bytes, offset)
@@ -213,7 +211,7 @@ cdef class ErlangTermDecoder(object):
             raise NotImplementedError('Lists with non empty tails are not supported')
         return items, offset
 
-    cdef object decode_m(self, bytes, offset):
+    def decode_m(self, bytes, offset):
         """BINARY_EXT"""
         length, = struct.unpack('>L', bytes[offset:offset + 4])
         offset += 4
@@ -222,34 +220,32 @@ cdef class ErlangTermDecoder(object):
             rv = rv.decode(self.encoding)
         return rv, offset + length
 
-    cdef object decode_n(self, bytes, offset):
+    def decode_n(self, bytes, offset):
         """SMALL_BIG_EXT"""
         n = ord(bytes[offset:offset+1])
         offset += 1
         return self.decode_bigint(n, bytes, offset)
 
-    cdef object decode_o(self, bytes, offset):
+    def decode_o(self, bytes, offset):
         """LARGE_BIG_EXT"""
         n, = struct.unpack('>L', bytes[offset:offset + 4])
         offset += 4
         return self.decode_bigint(n, bytes, offset)
 
-    @cython.boundscheck(False)
-    cdef object decode_bigint(self, n, bytes, unsigned int offset):
-        cdef unsigned char* cd = <unsigned char*>PyBytes_AsString(bytes)
-        cdef unsigned long long ull
-        cdef unsigned char pos = 0
+    def decode_bigint(self, n, bytes, offset):
 
-        if offset + 1 + n > PyBytes_Size(bytes):
+        pos = 0
+
+        if offset + 1 + n > len(bytes):
             raise OverflowError("Overflown! %s %s" % (offset + 1 + n, len(bytes)))
 
-        sign = cd[offset]
+        sign = bytes[offset]
         offset += 1
 
         if sign == 0 and n <= 8:
             ull = 0
             for i in range(n):
-                ull |= <unsigned long long>(cd[offset]) << pos
+                ull |= bytes[offset] << pos
                 pos += 8
                 offset += 1
 
@@ -258,14 +254,14 @@ cdef class ErlangTermDecoder(object):
         val = 0
         b = 1
         for i in range(n):
-            val += cd[offset] * b
+            val += bytes[offset] * b
             b <<= 8
             offset += 1
         if sign != 0:
             val = -val
         return val, offset
 
-    cdef object decode_e(self, bytes, offset):
+    def decode_e(self, bytes, offset):
         """REFERENCE_EXT"""
         node, offset = self.decode_part(bytes, offset)
         if not isinstance(node, Atom):
@@ -274,7 +270,7 @@ cdef class ErlangTermDecoder(object):
         offset += 5
         return Reference(node, [reference_id], creation), offset
 
-    cdef object decode_r(self, bytes, offset):
+    def decode_r(self, bytes, offset):
         """NEW_REFERENCE_EXT"""
         id_len, = struct.unpack('>H', bytes[offset:offset + 2])
         offset += 2
@@ -287,7 +283,7 @@ cdef class ErlangTermDecoder(object):
         offset += (4 * id_len)
         return Reference(node, reference_id, creation), offset
 
-    cdef object decode_f(self, bytes, offset):
+    def decode_f(self, bytes, offset):
         """PORT_EXT"""
         node, offset = self.decode_part(bytes, offset)
         if not isinstance(node, Atom):
@@ -296,7 +292,7 @@ cdef class ErlangTermDecoder(object):
         offset += 5
         return Port(node, port_id, creation), offset
 
-    cdef object decode_g(self, bytes, offset):
+    def decode_g(self, bytes, offset):
         """PID_EXT"""
         node, offset = self.decode_part(bytes, offset)
         if not isinstance(node, Atom):
@@ -305,7 +301,7 @@ cdef class ErlangTermDecoder(object):
         offset += 9
         return PID(node, pid_id, serial, creation), offset
 
-    cdef object decode_q(self, bytes, offset):
+    def decode_q(self, bytes, offset):
         """EXPORT_EXT"""
         module, offset = self.decode_part(bytes, offset)
         if not isinstance(module, Atom):
@@ -318,14 +314,14 @@ cdef class ErlangTermDecoder(object):
             raise ErlangTermDecodeError('Expected integer while parsing EXPORT_EXT, found %r instead' % arity)
         return Export(module, function, arity), offset + 1
 
-    cdef object decode_P(self, bytes, offset):
+    def decode_P(self, bytes, offset):
         """Compressed term"""
         usize, = struct.unpack('>L', bytes[offset:offset + 4])
         offset += 4
         bytes = zlib.decompress(bytes[offset:offset + usize])
         return self.decode_part(bytes, 0)
 
-    cdef object convert_atom(self, atom, encoding='latin1'):
+    def convert_atom(self, atom, encoding='latin1'):
         """Convert an atom (bytes) into an appropriate Python object,
         using specified encoding. The default encoding is latin1, which
         is the old-style encoding."""
