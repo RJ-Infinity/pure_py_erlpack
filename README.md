@@ -2,6 +2,14 @@
 
 Erlpack is a fast encoder and decoder for the Erlang Term Format (version 131) for Python and JavaScript.
 
+# Why the fork
+i made this for a project that couldnt use cython so i have ported the cython to pure
+python. The js has been left untouched.
+
+if you find any issues with the port please feel free to leave an issue or even better
+fix it yourself and create a pull request. its not that complicated of a project and
+the contirbution would be appriciated.
+
 # JavaScript
 
 ## Things that can be packed:
@@ -155,12 +163,6 @@ packed = pack(u)
 Discord has moved away from Go internally and so we do not maintain a version of erlpack in Go ourselves. However, all is
 not lost!, please check out: https://github.com/JakeMakesStuff/go-erlpack
 
-# Building
-
-## Python
-Generating the new `.cpp` files can be accomplished by running `python setup.py --use-cython build_ext --inplace`.
-
-`cython` must be installed for this to work.
 
 ### Testing
 
